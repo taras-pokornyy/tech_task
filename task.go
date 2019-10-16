@@ -11,21 +11,30 @@ type Job struct {
 	childJobIDs []int
 }
 
+func getJobByID(id int, jobs []Job) (Job, error){
+	for i:=0; i<len(jobs); i++ {
+		if jobs[i].ID == id {
+			return jobs[i], nil
+		}
+	}
+	return Job{}, errors.New("No such ID")
+}
+
 func countDuration(id int, jobs []Job) (int, error) {
 	duration := 0
 
-	for i := 0; i<len(jobs); i++ {
-		if jobs[i].ID == id {
-			for j := 0;  j<len(jobs[i].childJobIDs); j++ {
-				dur, err := countDuration(jobs[i].childJobIDs[j], jobs)
-				if err != nil {
-					fmt.Println(err)
-					return 0, err
-				}
-				duration += dur
-			}
-			return duration + jobs[i].jobTime, nil
-		}
+	job, err := getJobByID(id, jobs)
+	if err != nil {
+		return 0, err
 	}
-	return 0, errors.New("No such ID")
+
+	for j := 0;  j<len(job.childJobIDs); j++ {
+		currentDuration, err := countDuration(job.childJobIDs[j], jobs)
+		if err != nil {
+			fmt.Println(err)
+			return 0, err
+		}
+		duration += currentDuration
+	}
+	return duration + job.jobTime, nil
 }
